@@ -9,9 +9,9 @@ const audioSrc =
   "https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav";
 
 export function App() {
-  const [display, setDisplay] = useState(25 * 60);
-  const [breakLength, setBreakLength] = useState(5 * 60);
-  const [sessionLength, setSessionLength] = useState(25 * 60);
+  const [display, setDisplay] = useState(3);
+  const [breakLength, setBreakLength] = useState(5);
+  const [sessionLength, setSessionLength] = useState(3);
   const [timerOn, setTimerOn] = useState(false);
   const [onBreak, setOnBreak] = useState(false);
   const [breakAudio, setBreakAudio] = useState(new Audio(audioSrc));
@@ -55,6 +55,7 @@ export function App() {
     let date = new Date().getTime();
     let nextDate = new Date().getTime() + second;
     let onBreakVariable = onBreak;
+
     if (!timerOn) {
       let interval = setInterval(() => {
         date = new Date().getTime();
@@ -62,8 +63,20 @@ export function App() {
           setDisplay((prev) => {
             if (prev <= 0 && !onBreakVariable) {
               breakSound();
+
+              console.log(
+                `onBreakVariable: ${onBreakVariable}`,
+                `onBreak: ${onBreak}`
+              );
+
               onBreakVariable = true;
               setOnBreak(true);
+
+              console.log(
+                `onBreakVariable: ${onBreakVariable}`,
+                `onBreak: ${onBreak}`
+              );
+
               return breakLength;
             } else if (prev <= 0 && onBreakVariable) {
               breakSound();
@@ -106,6 +119,7 @@ export function App() {
           time={breakLength}
           formatTime={formatTime}
           type={"break"}
+          formatDisplayTime={formatDisplayTime}
         />
         <LengthComponent
           title={"Session Length"}
@@ -113,6 +127,7 @@ export function App() {
           time={sessionLength}
           formatTime={formatTime}
           type={"session"}
+          formatDisplayTime={formatDisplayTime}
         />
       </div>
       <div className="row">
@@ -130,17 +145,17 @@ export function App() {
           <div className="buttons d-flex justify-content-center align-content-center mt-3">
             <span id="start_stop" onClick={timeControl}>
               {timerOn ? (
-                <i class="fas fa-pause fa-4x m-3" style={iconStyle}></i>
+                <i className="fas fa-pause fa-4x m-3" style={iconStyle}></i>
               ) : (
                 <i
-                  class="fas fa-play fa-4x m-3"
+                  className="fas fa-play fa-4x m-3"
                   style={iconStyle}
                   id="start_stop"
                 ></i>
               )}
             </span>
             <i
-              class="fas fa-sync-alt fa-4x m-3"
+              className="fas fa-sync-alt fa-4x m-3"
               style={iconStyle}
               id="reset"
               onClick={resetTime}
@@ -152,7 +167,14 @@ export function App() {
   );
 }
 
-function LengthComponent({ title, updateTime, type, time, formatTime }) {
+function LengthComponent({
+  title,
+  updateTime,
+  type,
+  time,
+  formatTime,
+  formatDisplayTime,
+}) {
   return (
     <div className="col-md-6">
       <h1 id={type === "break" ? "break-label" : "session-label"}>{title}</h1>
@@ -169,7 +191,7 @@ function LengthComponent({ title, updateTime, type, time, formatTime }) {
           className="m-5 display-4"
           id={type === "break" ? "break-length" : "session-length"}
         >
-          {formatTime(time)}
+          {formatDisplayTime(time)}
         </h3>
         <div className="arrow">
           <i
