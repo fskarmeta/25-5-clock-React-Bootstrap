@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "./App.css";
 
 const iconStyle = {
@@ -9,16 +9,27 @@ const audioSrc =
   "https://raw.githubusercontent.com/freeCodeCamp/cdn/master/build/testable-projects-fcc/audio/BeepSound.wav";
 
 export function App() {
-  const [display, setDisplay] = useState(3);
-  const [breakLength, setBreakLength] = useState(5);
-  const [sessionLength, setSessionLength] = useState(3);
+  const [display, setDisplay] = useState(25 * 60);
+  const [breakLength, setBreakLength] = useState(5 * 60);
+  const [sessionLength, setSessionLength] = useState(25 * 60);
   const [timerOn, setTimerOn] = useState(false);
   const [onBreak, setOnBreak] = useState(false);
-  const [breakAudio, setBreakAudio] = useState(new Audio(audioSrc));
+
+  let player = useRef(null);
+
+  useEffect(() => {
+    if (display <= 0) {
+      setOnBreak(true);
+      breakSound();
+    } else if (!timerOn && display === breakLength) {
+      setOnBreak(false);
+    }
+    console.log("test");
+  }, [display, onBreak, timerOn, breakLength, sessionLength]);
 
   const breakSound = () => {
-    breakAudio.currentTime = 0;
-    breakAudio.play();
+    player.currentTime = 0;
+    player.play();
   };
 
   const formatDisplayTime = (time) => {
@@ -35,12 +46,12 @@ export function App() {
 
   const updateTime = (amount, type) => {
     if (type === "break") {
-      if (breakLength <= 60 && amount < 0) {
+      if ((breakLength <= 60 && amount < 0) || breakLength >= 60 * 60) {
         return;
       }
       setBreakLength((prev) => prev + amount);
     } else {
-      if (sessionLength <= 60 && amount < 0) {
+      if ((sessionLength <= 60 && amount < 0) || sessionLength >= 60 * 60) {
         return;
       }
       setSessionLength((prev) => prev + amount);
@@ -62,24 +73,11 @@ export function App() {
         if (date > nextDate) {
           setDisplay((prev) => {
             if (prev <= 0 && !onBreakVariable) {
-              breakSound();
-
-              console.log(
-                `onBreakVariable: ${onBreakVariable}`,
-                `onBreak: ${onBreak}`
-              );
-
+              // breakSound();
               onBreakVariable = true;
-              setOnBreak(true);
-
-              console.log(
-                `onBreakVariable: ${onBreakVariable}`,
-                `onBreak: ${onBreak}`
-              );
-
               return breakLength;
             } else if (prev <= 0 && onBreakVariable) {
-              breakSound();
+              // breakSound();
               onBreakVariable = false;
               setOnBreak(false);
               return sessionLength;
@@ -99,15 +97,20 @@ export function App() {
   };
 
   const resetTime = () => {
+    clearInterval(localStorage.getItem("interval-id"));
     setDisplay(25 * 60);
     setBreakLength(5 * 60);
     setSessionLength(25 * 60);
+    player.pause();
+    player.currentTime = 0;
+    setTimerOn(false);
+    setOnBreak(false);
   };
 
   return (
     <div className="container App">
       <div className="row">
-        <h1 className="title display-3 m-5 col-md-12 text-center">
+        <h1 className="title display-3 mb-5 col-md-12 text-center">
           Pomodoro Clock
         </h1>
       </div>
@@ -132,11 +135,12 @@ export function App() {
       </div>
       <div className="row">
         <div className="clock col-md-12 d-flex justify-content-center">
-          <div className="border p-5 rounded">
+          <div className={timerOn ? "box-active mt-5" : "null mt-5"}>
+            <span className={timerOn ? null : "box2"}></span>
             <h2 className="text-center disply-4" id="timer-label">
               {onBreak ? "Break" : "Session"}
             </h2>
-            <h1 className="timer display-1" id="time-left">
+            <h1 className="timer display-1 text-center" id="time-left">
               {formatDisplayTime(display)}
             </h1>
           </div>
@@ -163,21 +167,20 @@ export function App() {
           </div>
         </div>
       </div>
+      <audio ref={(t) => (player = t)} src={audioSrc} id="beep" />
     </div>
   );
 }
 
-function LengthComponent({
-  title,
-  updateTime,
-  type,
-  time,
-  formatTime,
-  formatDisplayTime,
-}) {
+function LengthComponent({ title, updateTime, type, time, formatTime }) {
   return (
     <div className="col-md-6">
-      <h1 id={type === "break" ? "break-label" : "session-label"}>{title}</h1>
+      <h1
+        className="text-center"
+        id={type === "break" ? "break-label" : "session-label"}
+      >
+        {title}
+      </h1>
       <div className="d-flex justify-content-center align-items-center">
         <div className="arrow">
           <i
@@ -191,7 +194,7 @@ function LengthComponent({
           className="m-5 display-4"
           id={type === "break" ? "break-length" : "session-length"}
         >
-          {formatDisplayTime(time)}
+          {formatTime(time)}
         </h3>
         <div className="arrow">
           <i

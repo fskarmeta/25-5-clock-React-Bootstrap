@@ -1,1 +1,3 @@
-Pomodoro Clock, work in progress...
+# Pomodoro Clock, React && Bootstrap.
+
+![Alt Text](./gif.gif)
